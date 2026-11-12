@@ -2,6 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: '/DevSync/',
+  base: process.env.NODE_ENV === 'production' ? '/DevSync/' : '/',
   plugins: [react()],
 })
