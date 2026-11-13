@@ -52,9 +52,19 @@ api.interceptors.response.use(
   }
 )
 
-/** Extract a friendly message from an axios error shaped by the contract. */
+/**
+ * Extract a friendly message from an axios error shaped by the app contract.
+ * Ensures we always return a plain string, never an object, so the UI can render safely.
+ */
 export function apiError(err, fallback = 'Something went wrong. Please try again.') {
-  return err?.response?.data?.error || fallback
+  const payload = err?.response?.data
+
+  if (typeof payload?.error === 'string') return payload.error
+  if (payload?.error && typeof payload.error.message === 'string') return payload.error.message
+  if (typeof payload?.message === 'string') return payload.message
+  if (typeof err?.message === 'string') return err.message
+
+  return fallback
 }
 
 /** Build URLSearchParams from a plain object, dropping empty values. */
