@@ -157,7 +157,19 @@ export default function HackathonDetail() {
                 <InfoRow icon={Award} label="Prizes & Grants" value={safeText(h.prize, 'Prizes & Recognition')} />
                 {mode === 'offline' && <InfoRow icon={MapPin} label="Physical Venue" value={safeText(h.venue, 'Campus Auditorium')} />}
               </div>
-              {skills.length > 0 && <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800"><p className="label">Recommended Skills</p><div className="flex flex-wrap gap-1.5">{skills.map((skill) => <span key={skill} className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 px-2.5 py-0.5 rounded-lg font-medium">{skill}</span>)}</div></div>}
+
+              {skillLabels(h.requiredSkills).length > 0 && (
+                <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <p className="label">Recommended Skills</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {skillLabels(h.requiredSkills).map((s) => (
+                      <span key={s} className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 px-2.5 py-0.5 rounded-lg font-medium">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-card">

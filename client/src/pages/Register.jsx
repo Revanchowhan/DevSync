@@ -11,6 +11,7 @@ import { apiError } from '../api/axios.js';
 import { isValidEmail } from '../utils/format.js';
 import { firstName, normalizeSkills } from '../utils/skills.js';
 import { YEAR_OPTIONS } from '../utils/years.js';
+import { firstName } from '../utils/skills.js';
 import SkillPicker from '../components/SkillPicker.jsx';
 import GoogleSignIn from '../components/GoogleSignIn.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
@@ -86,9 +87,13 @@ export default function Register() {
         ? { idToken, mode: 'signup', role: 'student', college: form.college.trim(), branch: form.branch.trim(), year: Number(form.year), skills: normalizeSkills(form.skills), github: form.github.trim(), linkedin: form.linkedin.trim(), bio: form.bio.trim() }
         : { idToken, mode: 'signup', role: 'host', organization: form.organization.trim() };
       const result = await googleAuth(payload);
-      if (result?.pendingApproval) { setHostPending(true); return; }
-      toast.success(`Welcome aboard, ${firstName(result)}! 🎉`);
-      goAfterSignup(result);
+      if (result?.pendingApproval) {
+        setHostPending(true);
+        return;
+      }
+      const user = result;
+      toast.success(`Welcome aboard, ${firstName(user)}! 🎉`);
+      goAfterSignup(user);
     } catch (err) {
       toast.error(apiError(err, 'Google sign-up failed.'));
     } finally {
@@ -110,7 +115,7 @@ export default function Register() {
         user = result;
       }
       toast.success(`Welcome aboard, ${firstName(user)}! 🎉`);
-      goAfterSignup(user);
+      navigate(user.role === 'host' ? '/host' : '/hackathons', { replace: true });
     } catch (err) {
       toast.error(apiError(err, 'Registration failed.'));
     } finally {

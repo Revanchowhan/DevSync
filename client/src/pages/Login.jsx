@@ -1,15 +1,19 @@
-import React, { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import toast from 'react-hot-toast'
-import { ArrowRight, Sparkles } from 'lucide-react'
-import { useAuth } from '../context/AuthContext.jsx'
-import { apiError } from '../api/axios.js'
-import { isValidEmail } from '../utils/format.js'
-import { firstName } from '../utils/skills.js'
-import GoogleSignIn from '../components/GoogleSignIn.jsx'
-import PasswordInput from '../components/PasswordInput.jsx'
-import { Button } from '../components/ui/Button.jsx'
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { ArrowRight, Sparkles } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { apiError } from '../api/axios.js';
+import { isValidEmail } from '../utils/format.js';
+import { firstName } from '../utils/skills.js';
+import GoogleSignIn from '../components/GoogleSignIn.jsx';
+import PasswordInput from '../components/PasswordInput.jsx';
+import { Button } from '../components/ui/Button.jsx';
+
+function displayName(user) {
+  return typeof user?.name === 'string' && user.name.trim() ? user.name.trim().split(/\s+/)[0] : 'builder';
+}
 
 export default function Login() {
   const navigate = useNavigate()

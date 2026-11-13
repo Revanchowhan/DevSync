@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, X } from 'lucide-react'
+import { normalizeSkills } from '../utils/skills'
 
 export const SKILL_LEVELS = ['Beginner', 'Intermediate', 'Advanced']
 
@@ -22,9 +23,13 @@ const levelColor = {
 /**
  * SkillPicker — add skills with a proficiency level, plus one-tap suggestions.
  */
-export default function SkillPicker({ value = [], onChange, withLevel = true, label = 'Skills', error }) {
+export default function SkillPicker({ value: rawValue, onChange, withLevel = true, label = 'Skills', error }) {
   const [name, setName] = useState('')
   const [level, setLevel] = useState('Intermediate')
+
+  // Accounts saved before skills had levels hold plain strings; normalize so
+  // the rest of the component can rely on { name, level? } objects.
+  const value = normalizeSkills(rawValue)
 
   const add = (skillName, skillLevel = level) => {
     const clean = (skillName || '').trim()
