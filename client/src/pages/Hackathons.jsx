@@ -1,67 +1,83 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-} from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Trophy,
-  Calendar,
-  MapPin,
-  Globe,
-  RotateCcw,
-  ArrowRight,
   AlertCircle,
+  ArrowRight,
+  Calendar,
+  Globe,
+  MapPin,
+  RotateCcw,
+  Trophy,
 } from 'lucide-react'
-import api, {
-  apiError,
-  toQuery,
-} from '../api/axios.js'
+import api, { apiError, toQuery } from '../api/axios.js'
 import { formatDate } from '../utils/format.js'
 import CountdownTimer from '../components/CountdownTimer.jsx'
-import {
-  HackathonCardSkeleton,
-} from '../components/Skeleton.jsx'
+import { HackathonCardSkeleton } from '../components/Skeleton.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 
-const text = (value, fallback = '') => {
-  if (typeof value === 'string') return value
+const EMPTY_FILTERS = {
+  search: '',
+  skill: '',
+  status: '',
+  from: '',
+  to: '',
+}
 
+function safeText(value, fallback = '') {
+  if (typeof value === 'string') return value.trim()
   if (
     typeof value === 'number' ||
     typeof value === 'boolean'
   ) {
     return String(value)
   }
-
   return fallback
+}
+
+function safeNumber(value, fallback = 0) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : fallback
+}
+
+function getSkillName(skill) {
+  if (typeof skill === 'string') {
+    return skill.trim()
+  }
+
+  if (typeof skill === 'number') {
+    return String(skill)
+  }
+
+  if (
+    skill &&
+    typeof skill === 'object' &&
+    typeof skill.name === 'string'
+  ) {
+    return skill.name.trim()
+  }
+
+  return ''
 }
 
 function skillList(value) {
   if (!Array.isArray(value)) return []
 
-  return value.flatMap((skill) => {
-    if (
-      typeof skill === 'string' ||
-      typeof skill === 'number'
-    ) {
-      return [String(skill)]
-    }
+  const seen = new Set()
 
-    if (
-      skill &&
-      typeof skill === 'object' &&
-      typeof skill.name === 'string'
-    ) {
-      const name = skill.name.trim()
-      return name ? [name] : []
-    }
+  return value
+    .map(getSkillName)
+    .filter(Boolean)
+    .filter((name) => {
+      const key = name.toLowerCase()
 
-    return []
-  })
+      if (seen.has(key)) return false
+
+      seen.add(key)
+      return true
+    })
 }
 
 function StatusBadge({ status }) {
@@ -88,7 +104,7 @@ function StatusBadge({ status }) {
 }
 
 function Banner({ url, title }) {
-  const imageUrl = text(url)
+  const imageUrl = safeText(url)
 
   if (imageUrl) {
     return (
@@ -97,6 +113,9 @@ function Banner({ url, title }) {
         alt={title}
         className="w-full h-44 object-cover"
         loading="lazy"
+        onError={(event) => {
+          event.currentTarget.style.display = 'none'
+        }}
       />
     )
   }
@@ -112,26 +131,28 @@ function Banner({ url, title }) {
   )
 }
 
-function HackathonCard({ h, index }) {
-  const title = text(h?.title, 'Hackathon')
-  const description = text(h?.description)
-  const skills = skillList(h?.requiredSkills)
-  const mode = text(h?.mode)
-  const venue = text(h?.venue, 'In-Person')
-
-  const participantCount = Number.isFinite(
-    Number(h?.participantCount)
+function HackathonCard({ hackathon, index }) {
+  const title = safeText(hackathon?.title, 'Hackathon')
+  const description = safeText(hackathon?.description)
+  const skills = skillList(hackathon?.requiredSkills)
+  const mode = safeText(hackathon?.mode).toLowerCase()
+  const venue = safeText(hackathon?.venue, 'In-Person')
+  const status = safeText(hackathon?.status)
+  const id = safeText(
+    hackathon?._id,
+    `hackathon-${index}`
   )
-    ? Number(h.participantCount)
-    : 0
 
-  const teamSizeLimit = Number.isFinite(
-    Number(h?.teamSizeLimit)
+  const participantCount = safeNumber(
+    hackathon?.participantCount
   )
-    ? Number(h.teamSizeLimit)
-    : '—'
 
-  const id = text(h?._id, `hackathon-${index}`)
+  const teamSizeLimit =
+    hackathon?.teamSizeLimit === undefined ||
+    hackathon?.teamSizeLimit === null ||
+    hackathon?.teamSizeLimit === ''
+      ? '—'
+      : safeNumber(hackathon.teamSizeLimit, '—')
 
   return (
     <motion.div
@@ -149,14 +170,14 @@ function HackathonCard({ h, index }) {
         <div>
           <div className="relative">
             <Banner
-              url={h?.bannerUrl}
+              url={hackathon?.bannerUrl}
               title={title}
             />
 
             <div className="absolute top-3 left-3 flex gap-2">
-              <StatusBadge status={text(h?.status)} />
+              <StatusBadge status={status} />
 
-              {Boolean(h?.isRegistered) && (
+              {Boolean(hackathon?.isRegistered) && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-600 text-white shadow-subtle">
                   ✓ Registered
                 </span>
@@ -175,7 +196,7 @@ function HackathonCard({ h, index }) {
 
             <div className="mt-3.5">
               <CountdownTimer
-                deadline={h?.registrationDeadline}
+                deadline={hackathon?.registrationDeadline}
                 compact
               />
             </div>
@@ -203,9 +224,10 @@ function HackathonCard({ h, index }) {
           <div className="flex items-center justify-between text-[11px]">
             <span className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
+
               <span>
-                {formatDate(h?.startDate)} –{' '}
-                {formatDate(h?.endDate)}
+                {formatDate(hackathon?.startDate)} –{' '}
+                {formatDate(hackathon?.endDate)}
               </span>
             </span>
 
@@ -226,9 +248,7 @@ function HackathonCard({ h, index }) {
                 {mode === 'online' ? 'Online' : venue}
               </span>
 
-              <span>
-                · Max {teamSizeLimit}
-              </span>
+              <span>· Max {teamSizeLimit}</span>
             </span>
 
             <span className="text-indigo-600 dark:text-indigo-400 font-semibold inline-flex items-center gap-0.5">
@@ -246,86 +266,60 @@ export default function Hackathons() {
   const [hackathons, setHackathons] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
 
-  const [filters, setFilters] = useState({
-    search: '',
-    skill: '',
-    status: '',
-    from: '',
-    to: '',
-  })
+  const fetchAll = useCallback(async (currentFilters) => {
+    setLoading(true)
+    setError('')
 
-  const fetchAll = useCallback(
-    async (currentFilters = filters) => {
-      setLoading(true)
-      setError('')
+    try {
+      const { data } = await api.get(
+        `/hackathons?${toQuery(currentFilters)}`
+      )
 
-      try {
-        const { data } = await api.get(
-          `/hackathons?${toQuery(currentFilters)}`
-        )
+      const receivedHackathons = Array.isArray(
+        data?.hackathons
+      )
+        ? data.hackathons
+        : []
 
-        const safeHackathons = Array.isArray(
-          data?.hackathons
-        )
-          ? data.hackathons.filter(
-              (item) =>
-                item &&
-                typeof item === 'object' &&
-                !Array.isArray(item)
-            )
-          : []
+      const safeHackathons = receivedHackathons.filter(
+        (item) =>
+          item &&
+          typeof item === 'object' &&
+          !Array.isArray(item)
+      )
 
-        setHackathons(safeHackathons)
-      } catch (err) {
-        setError(
+      setHackathons(safeHackathons)
+    } catch (requestError) {
+      setHackathons([])
+      setError(
+        safeText(
           apiError(
-            err,
+            requestError,
             'Could not load hackathons right now. Please try again.'
-          )
+          ),
+          'Could not load hackathons right now. Please try again.'
         )
-        setHackathons([])
-      } finally {
-        setLoading(false)
-      }
-    },
-    [filters]
-  )
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    fetchAll()
-  }, [fetchAll])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchAll(filters)
-    }, 350)
-
-    return () => clearTimeout(timer)
-  }, [
-    filters.search,
-    filters.skill,
-    filters.status,
-    filters.from,
-    filters.to,
-    fetchAll,
-  ])
+    fetchAll(filters)
+  }, [fetchAll, filters])
 
   const setFilter = (key, value) => {
     setFilters((current) => ({
       ...current,
-      [key]: value,
+      [key]: typeof value === 'string' ? value : '',
     }))
   }
 
   const clearFilters = () => {
-    setFilters({
-      search: '',
-      skill: '',
-      status: '',
-      from: '',
-      to: '',
-    })
+    setFilters({ ...EMPTY_FILTERS })
   }
 
   const hasFilters = Object.values(filters).some(Boolean)
@@ -390,6 +384,7 @@ export default function Hackathons() {
 
             {hasFilters && (
               <Button
+                type="button"
                 onClick={clearFilters}
                 variant="secondary"
                 size="sm"
@@ -412,10 +407,7 @@ export default function Hackathons() {
         <EmptyState
           icon={AlertCircle}
           title="Couldn’t load hackathons"
-          message={text(
-            error,
-            'Could not load hackathons.'
-          )}
+          message={error}
           actionLabel="Try again"
           onAction={() => fetchAll(filters)}
         />
@@ -428,20 +420,18 @@ export default function Hackathons() {
               ? 'Try loosening your filter parameters to explore more competitions.'
               : 'No hackathons are live right now. Check back soon!'
           }
-          actionLabel={
-            hasFilters ? 'Clear Filters' : undefined
-          }
+          actionLabel={hasFilters ? 'Clear Filters' : undefined}
           onAction={hasFilters ? clearFilters : undefined}
         />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {hackathons.map((hackathon, index) => (
             <HackathonCard
-              key={text(
+              key={safeText(
                 hackathon?._id,
                 `hackathon-${index}`
               )}
-              h={hackathon}
+              hackathon={hackathon}
               index={index}
             />
           ))}
