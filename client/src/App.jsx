@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
+import { ShieldCheck } from 'lucide-react'
 import { useAuth } from './context/AuthContext.jsx'
 import PublicNavbar from './components/PublicNavbar.jsx'
 import Sidebar from './components/Sidebar.jsx'
@@ -9,6 +10,7 @@ import Footer from './components/Footer.jsx'
 import AnimatedBackground from './components/AnimatedBackground.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RoleRoute from './components/RoleRoute.jsx'
+import AdminRoute from './components/AdminRoute.jsx'
 
 import Landing from './pages/Landing.jsx'
 import Login from './pages/Login.jsx'
@@ -30,6 +32,7 @@ import HostDashboard from './pages/host/HostDashboard.jsx'
 import HostRequests from './pages/host/HostRequests.jsx'
 import HackathonForm from './pages/host/HackathonForm.jsx'
 import HackathonManage from './pages/host/HackathonManage.jsx'
+import AdminPanel from './pages/AdminPanel.jsx'
 import NotFound from './pages/NotFound.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
@@ -55,8 +58,26 @@ function DashboardRedirect() {
   const { user, loading } = useAuth()
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
+  if (user.isAdmin) return <Navigate to="/admin" replace />
   if (user.role === 'host') return <Navigate to="/host" replace />
   return <Page><Dashboard /></Page>
+}
+
+function AdminShortcut() {
+  const { user } = useAuth()
+  if (!user?.isAdmin) return null
+
+  return (
+    <div className="px-4 pt-3 sm:px-6 lg:px-8 max-w-7xl w-full mx-auto">
+      <Link
+        to="/admin"
+        className="inline-flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-950/70"
+      >
+        <ShieldCheck className="h-4 w-4" />
+        Admin panel
+      </Link>
+    </div>
+  )
 }
 
 const PUBLIC_PATHS = ['/', '/login', '/register', '/verify-email', '/privacy', '/terms', '/hackathons']
@@ -119,6 +140,9 @@ export default function App() {
         <Route path="/host/hackathons/:id/edit" element={<RoleRoute role="host"><Page><HackathonForm /></Page></RoleRoute>} />
         <Route path="/host/hackathons/:id" element={<RoleRoute role="host"><Page><HackathonManage /></Page></RoleRoute>} />
 
+        {/* Admin pages also rely on server-side requireAdmin authorization. */}
+        <Route path="/admin" element={<AdminRoute><Page><AdminPanel /></Page></AdminRoute>} />
+
         <Route path="/privacy" element={<Page><Privacy /></Page>} />
         <Route path="/terms" element={<Page><Terms /></Page>} />
         <Route path="*" element={<Page><NotFound /></Page>} />
@@ -157,6 +181,7 @@ export default function App() {
               onOpenMobileMenu={() => setMobileSidebarOpen(true)}
               collapsed={sidebarCollapsed}
             />
+            <AdminShortcut />
             <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
               {renderRoutes()}
             </main>
