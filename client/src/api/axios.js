@@ -2,6 +2,8 @@ import axios from 'axios'
 
 export const AUTH_KEY = 'devsync_auth'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 /** Read the persisted { token, user } pair, or null. */
 export function getAuth() {
   try {
@@ -22,7 +24,7 @@ export function clearAuth() {
 }
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
