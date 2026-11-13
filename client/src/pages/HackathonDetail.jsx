@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import api, { apiError } from '../api/axios.js'
 import { formatDate, formatDateTime, timeAgo } from '../utils/format.js'
+import { skillLabels } from '../utils/skills.js'
 import CountdownTimer from '../components/CountdownTimer.jsx'
 import { PageSpinner } from '../components/ProtectedRoute.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -192,11 +193,11 @@ export default function HackathonDetail() {
                 {h.mode === 'offline' && <InfoRow icon={MapPin} label="Physical Venue" value={h.venue || 'Campus Auditorium'} />}
               </div>
 
-              {(h.requiredSkills || []).length > 0 && (
+              {skillLabels(h.requiredSkills).length > 0 && (
                 <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <p className="label">Recommended Skills</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {h.requiredSkills.map((s) => (
+                    {skillLabels(h.requiredSkills).map((s) => (
                       <span key={s} className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 px-2.5 py-0.5 rounded-lg font-medium">
                         {s}
                       </span>

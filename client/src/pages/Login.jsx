@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiError } from '../api/axios.js';
 import { isValidEmail } from '../utils/format.js';
+import { firstName } from '../utils/skills.js';
 import GoogleSignIn from '../components/GoogleSignIn.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { Button } from '../components/ui/Button.jsx';
