@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles, Lock, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { apiError } from '../api/axios.js';
 import { isValidEmail } from '../utils/format.js';
+import { firstName } from '../utils/skills.js';
 import GoogleSignIn from '../components/GoogleSignIn.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -44,7 +45,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       const user = await login(form.email.trim(), form.password);
-      toast.success(`Welcome back, ${user.name.split(' ')[0]}! 🚀`);
+      toast.success(`Welcome back, ${firstName(user)}! 🚀`);
       goAfterAuth(user);
     } catch (err) {
       toast.error(apiError(err, 'Login failed. Check your credentials.'));
@@ -56,7 +57,7 @@ export default function Login() {
   const handleGoogle = async (idToken) => {
     try {
       const user = await googleAuth({ idToken, mode: 'login' });
-      toast.success(`Welcome back, ${user.name.split(' ')[0]}! 🚀`);
+      toast.success(`Welcome back, ${firstName(user)}! 🚀`);
       goAfterAuth(user);
     } catch (err) {
       if (err?.response?.status === 404) {

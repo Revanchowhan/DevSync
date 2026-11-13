@@ -6,6 +6,7 @@ import api, { apiError } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import SkillPicker from './SkillPicker';
+import { normalizeSkills } from '../utils/skills';
 
 const ROLES = ['Developer', 'Designer', 'Data Scientist', 'Researcher', 'Presenter'];
 const EXPERIENCE_LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
@@ -18,7 +19,7 @@ export default function OnboardingModal() {
   // Form states
   const [selectedRoles, setSelectedRoles] = useState(user?.preferredRoles || ['Developer']);
   const [experienceLevel, setExperienceLevel] = useState(user?.experienceLevel || 'Beginner');
-  const [skills, setSkills] = useState(user?.skills || []);
+  const [skills, setSkills] = useState(normalizeSkills(user?.skills));
   const [interestInput, setInterestInput] = useState('');
   const [interests, setInterests] = useState(user?.interests || []);
   const [availability, setAvailability] = useState(user?.availability || 'available');

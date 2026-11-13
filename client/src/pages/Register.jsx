@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { apiError } from '../api/axios.js';
 import { isValidEmail } from '../utils/format.js';
 import { YEAR_OPTIONS } from '../utils/years.js';
+import { firstName } from '../utils/skills.js';
 import SkillPicker from '../components/SkillPicker.jsx';
 import GoogleSignIn from '../components/GoogleSignIn.jsx';
 import PasswordInput from '../components/PasswordInput.jsx';
@@ -109,7 +110,7 @@ export default function Register() {
         return;
       }
       const user = result;
-      toast.success(`Welcome aboard, ${user.name.split(' ')[0]}! 🎉`);
+      toast.success(`Welcome aboard, ${firstName(user)}! 🎉`);
       goAfterSignup(user);
     } catch (err) {
       toast.error(apiError(err, 'Google sign-up failed.'));
@@ -153,7 +154,7 @@ export default function Register() {
         }
         user = result;
       }
-      toast.success(`Welcome aboard, ${user.name.split(' ')[0]}! 🎉`);
+      toast.success(`Welcome aboard, ${firstName(user)}! 🎉`);
       navigate(user.role === 'host' ? '/host' : '/hackathons', { replace: true });
     } catch (err) {
       toast.error(apiError(err, 'Registration failed.'));
