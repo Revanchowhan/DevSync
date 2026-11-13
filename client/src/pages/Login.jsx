@@ -16,57 +16,57 @@ function displayName(user) {
 }
 
 export default function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { login, googleAuth } = useAuth();
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { login, googleAuth } = useAuth()
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [errors, setErrors] = useState({})
+  const [submitting, setSubmitting] = useState(false)
 
   const set = (key, value) => {
-    setForm((current) => ({ ...current, [key]: value }));
-    setErrors((current) => ({ ...current, [key]: undefined }));
-  };
+    setForm((current) => ({ ...current, [key]: value }))
+    setErrors((current) => ({ ...current, [key]: undefined }))
+  }
 
   const validate = () => {
-    const nextErrors = {};
-    if (!isValidEmail(form.email)) nextErrors.email = 'Enter a valid email address.';
-    if (!form.password) nextErrors.password = 'Password is required.';
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
+    const nextErrors = {}
+    if (!isValidEmail(form.email)) nextErrors.email = 'Enter a valid email address.'
+    if (!form.password) nextErrors.password = 'Password is required.'
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
 
   const goAfterAuth = (user) => {
-    const from = location.state?.from;
-    if (from && from !== '/login' && from !== '/register') navigate(from, { replace: true });
-    else navigate(user?.role === 'host' ? '/host' : '/hackathons', { replace: true });
-  };
+    const from = location.state?.from
+    if (from && from !== '/login' && from !== '/register') navigate(from, { replace: true })
+    else navigate(user?.role === 'host' ? '/host' : '/hackathons', { replace: true })
+  }
 
   const submit = async (event) => {
-    event.preventDefault();
-    if (!validate()) return;
-    setSubmitting(true);
+    event.preventDefault()
+    if (!validate()) return
+    setSubmitting(true)
     try {
-      const user = await login(form.email.trim(), form.password);
-      toast.success(`Welcome back, ${displayName(user)}! 🚀`);
-      goAfterAuth(user);
+      const user = await login(form.email.trim(), form.password)
+      toast.success(`Welcome back, ${firstName(user, 'there')}! 🚀`)
+      goAfterAuth(user)
     } catch (err) {
-      toast.error(apiError(err, 'Login failed. Check your credentials.'));
+      toast.error(apiError(err, 'Login failed. Check your credentials.'))
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const handleGoogle = async (idToken) => {
     try {
-      const user = await googleAuth({ idToken, mode: 'login' });
-      toast.success(`Welcome back, ${displayName(user)}! 🚀`);
-      goAfterAuth(user);
+      const user = await googleAuth({ idToken, mode: 'login' })
+      toast.success(`Welcome back, ${firstName(user, 'there')}! 🚀`)
+      goAfterAuth(user)
     } catch (err) {
-      if (err?.response?.status === 404) toast.error('No account found for this Google email. Please sign up first.');
-      else toast.error(apiError(err, 'Google sign-in failed.'));
+      if (err?.response?.status === 404) toast.error('No account found for this Google email. Please sign up first.')
+      else toast.error(apiError(err, 'Google sign-in failed.'))
     }
-  };
+  }
 
   return (
     <div className="min-h-[calc(100vh-160px)] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -84,7 +84,7 @@ export default function Login() {
               {errors.email && <p className="error-text">{errors.email}</p>}
             </div>
             <div>
-              <div className="flex items-center justify-between"><label className="label" htmlFor="password">Password</label></div>
+              <label className="label" htmlFor="password">Password</label>
               <PasswordInput id="password" autoComplete="current-password" placeholder="••••••••" value={form.password} onChange={(event) => set('password', event.target.value)} />
               {errors.password && <p className="error-text">{errors.password}</p>}
             </div>
@@ -105,5 +105,5 @@ export default function Login() {
         </div>
       </motion.div>
     </div>
-  );
+  )
 }
