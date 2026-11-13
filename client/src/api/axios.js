@@ -28,7 +28,6 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Attach Bearer token from localStorage on every request.
 api.interceptors.request.use((config) => {
   const auth = getAuth()
   if (auth?.token) {
@@ -37,7 +36,6 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Expired/invalid token -> wipe local auth and notify the app.
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -52,22 +50,22 @@ api.interceptors.response.use(
   }
 )
 
-/**
- * Extract a friendly message from an axios error shaped by the app contract.
- * Ensures we always return a plain string, never an object, so the UI can render safely.
- */
+/** Return a plain string message from common backend error shapes. */
 export function apiError(err, fallback = 'Something went wrong. Please try again.') {
   const payload = err?.response?.data
+  const nestedError = payload && typeof payload.error === 'object' ? payload.error : null
 
   if (typeof payload?.error === 'string') return payload.error
-  if (payload?.error && typeof payload.error.message === 'string') return payload.error.message
+  if (nestedError && typeof nestedError.message === 'string') return nestedError.message
+  if (Array.isArray(payload?.error) && payload.error.length) return String(payload.error[0])
   if (typeof payload?.message === 'string') return payload.message
+  if (Array.isArray(payload?.message) && payload.message.length) return payload.message.join(', ')
   if (typeof err?.message === 'string') return err.message
+  if (typeof err?.response?.statusText === 'string') return err.response.statusText
 
   return fallback
 }
 
-/** Build URLSearchParams from a plain object, dropping empty values. */
 export function toQuery(params) {
   const q = new URLSearchParams()
   Object.entries(params || {}).forEach(([k, v]) => {
