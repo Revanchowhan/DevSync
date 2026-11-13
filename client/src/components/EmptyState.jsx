@@ -5,13 +5,21 @@ import { Sparkles } from 'lucide-react'
 
 export default function EmptyState({
   icon: Icon,
-  title,
-  message,
+  title = '',
+  message = '',
   actionLabel,
   actionTo,
   onAction,
 }) {
-  const isTextIcon = typeof Icon === 'string'
+  const iconContent = !Icon ? (
+    <Sparkles className="w-5 h-5" />
+  ) : typeof Icon === 'string' ? (
+    <span className="text-xl">{Icon}</span>
+  ) : (
+    React.createElement(Icon, {
+      className: 'w-6 h-6',
+    })
+  )
 
   return (
     <motion.div
@@ -20,17 +28,7 @@ export default function EmptyState({
       className="glass rounded-2xl p-10 text-center max-w-md mx-auto"
     >
       <div className="mx-auto w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 shadow-subtle">
-        {Icon ? (
-          isTextIcon ? (
-            <span className="text-xl">{Icon}</span>
-          ) : (
-            React.createElement(Icon, {
-              className: 'w-6 h-6',
-            })
-          )
-        ) : (
-          <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-        )}
+        {iconContent}
       </div>
 
       <h3 className="text-base font-semibold text-slate-900 dark:text-white">
