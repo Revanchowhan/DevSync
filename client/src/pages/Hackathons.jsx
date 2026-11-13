@@ -13,6 +13,7 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
+  AlertCircle,
 } from 'lucide-react'
 import api, { apiError, toQuery } from '../api/axios.js'
 import { formatDate, formatDateTime } from '../utils/format.js'
@@ -41,8 +42,9 @@ function Banner({ url, title }) {
     return <img src={url} alt={title} className="w-full h-44 object-cover" loading="lazy" />
   }
   return (
-    <div className="w-full h-44 bg-gradient-to-tr from-indigo-600/10 via-sky-500/10 to-indigo-600/5 dark:from-slate-800 dark:to-slate-850 flex items-center justify-center relative overflow-hidden border-b border-slate-100 dark:border-slate-800">
-      <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-subtle">
+    <div className="w-full h-44 bg-gradient-to-tr from-indigo-600/10 via-sky-500/10 to-indigo-600/5 dark:from-slate-800 dark:to-slate-850 flex items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.18),transparent_38%)]" />
+      <div className="relative w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-subtle">
         <Trophy className="w-6 h-6" />
       </div>
     </div>
@@ -56,7 +58,7 @@ function HackathonCard({ h, index }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
     >
-      <Link to={`/hackathons/${h._id}`} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden block h-full shadow-card hover:shadow-card-hover transition-all flex flex-col justify-between">
+      <Link to={`/hackathons/${h._id}`} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden block h-full shadow-card hover:shadow-card-lg transition-all">
         <div>
           <div className="relative">
             <Banner url={h.bannerUrl} title={h.title} />
@@ -121,19 +123,22 @@ function HackathonCard({ h, index }) {
 export default function Hackathons() {
   const [hackathons, setHackathons] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [filters, setFilters] = useState({ search: '', skill: '', status: '', from: '', to: '' })
 
   const fetchAll = useCallback(async (f = filters) => {
     setLoading(true)
+    setError(null)
     try {
       const { data } = await api.get(`/hackathons?${toQuery(f)}`)
       setHackathons(data.hackathons || [])
     } catch (err) {
-      // keep silent on list load; show empty state
+      setError(apiError(err, 'Could not load hackathons right now. Please try again.'))
+      setHackathons([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [filters])
 
   useEffect(() => {
     fetchAll()
@@ -143,7 +148,7 @@ export default function Hackathons() {
   useEffect(() => {
     const id = setTimeout(() => fetchAll(filters), 350)
     return () => clearTimeout(id)
-  }, [filters.search, filters.skill, filters.status, filters.from, filters.to])
+  }, [filters.search, filters.skill, filters.status, filters.from, filters.to, fetchAll])
 
   const setF = (k, v) => setFilters((f) => ({ ...f, [k]: v }))
   const clearFilters = () => setFilters({ search: '', skill: '', status: '', from: '', to: '' })
@@ -176,7 +181,7 @@ export default function Hackathons() {
             onChange={(e) => setF('skill', e.target.value)}
           />
           <select
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/15"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
             value={filters.status}
             onChange={(e) => setF('status', e.target.value)}
           >
@@ -207,6 +212,14 @@ export default function Hackathons() {
             <HackathonCardSkeleton key={i} />
           ))}
         </div>
+      ) : error ? (
+        <EmptyState
+          icon={AlertCircle}
+          title="Couldn’t load hackathons"
+          message={error}
+          actionLabel="Try again"
+          onAction={() => fetchAll(filters)}
+        />
       ) : hackathons.length === 0 ? (
         <EmptyState
           icon={Trophy}
