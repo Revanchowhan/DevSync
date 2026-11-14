@@ -137,7 +137,7 @@ export default function Notifications() {
         </div>
       ) : filteredItems.length === 0 ? (
         <EmptyState
-          icon={<Bell className="w-8 h-8 text-indigo-500" />}
+          icon={Bell}
           title={filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
           message="Team invites, hackathon announcements, and connection updates will appear here."
         />
