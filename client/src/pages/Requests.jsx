@@ -13,6 +13,11 @@ import EmptyState from '../components/EmptyState.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
 
+const firstName = (user, fallback = 'there') => {
+  const name = typeof user?.name === 'string' ? user.name.trim() : '';
+  return name ? name.split(/\s+/)[0] : fallback;
+};
+
 const statusBadge = (status) => {
   switch (status) {
     case 'accepted':
@@ -243,7 +248,7 @@ function RequestCard({ r, tab, onAction }) {
                 size="sm"
                 variant="primary"
                 disabled={busy}
-                onClick={() => act(() => api.put(`/requests/${r._id}/accept`), `Welcome aboard, ${other?.name?.split(' ')[0]}!`)}
+                onClick={() => act(() => api.put(`/requests/${r._id}/accept`), `Welcome aboard, ${firstName(other, 'builder')}!`)}
                 className="gap-1.5"
               >
                 <Check className="w-3.5 h-3.5" />
@@ -400,7 +405,7 @@ export default function Requests() {
       ) : section === 'connections' ? (
         connections.length === 0 ? (
           <EmptyState
-            icon={<Inbox className="w-8 h-8 text-indigo-500" />}
+            icon={Inbox}
             title={
               connSubTab === 'received'
                 ? 'No incoming connection requests'
@@ -423,7 +428,7 @@ export default function Requests() {
         )
       ) : requests.length === 0 ? (
         <EmptyState
-          icon={<Users className="w-8 h-8 text-indigo-500" />}
+          icon={Users}
           title={teamTab === 'received' ? 'No incoming squad requests' : 'No outgoing squad requests'}
           message={
             teamTab === 'received'
