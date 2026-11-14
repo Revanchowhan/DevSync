@@ -16,6 +16,9 @@ import { timeAgo } from '../utils/format';
 import { ListSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 
+const text = (value, fallback = '') =>
+  typeof value === 'string' ? value : fallback;
+
 export default function Messages() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
@@ -48,7 +51,7 @@ export default function Messages() {
   const fetchConversations = useCallback(async () => {
     try {
       const { data } = await api.get('/conversations');
-      setConversations(data.conversations || []);
+      setConversations(Array.isArray(data?.conversations) ? data.conversations : []);
     } catch (err) {
       toast.error(apiError(err, 'Failed to load conversations.'));
     } finally {
@@ -81,24 +84,27 @@ export default function Messages() {
 
   const getOtherParticipant = (conv) => {
     if (!conv || conv.type !== 'direct') return null;
-    return (conv.participants || []).find(
+    return (Array.isArray(conv.participants) ? conv.participants : []).find(
       (p) => String(p._id || p.id) !== String(user?._id || user?.id)
     );
   };
 
   const getConvTitle = (conv) => {
-    if (conv.type === 'team') {
-      return conv.team?.name || 'Hackathon Squad';
+    if (conv?.type === 'team') {
+      return text(conv.team?.name, 'Hackathon Squad');
     }
     const other = getOtherParticipant(conv);
-    return other?.name || 'DevSync Member';
+    return text(other?.name, 'DevSync Member');
   };
+
+  const lastMessageText = (conv) => text(conv?.lastMessageText);
+  const senderName = (message) => text(message?.sender?.name, 'DevSync Member');
 
   const filteredConversations = conversations.filter((c) => {
     if (chatTypeFilter !== 'all' && c.type !== chatTypeFilter) return false;
     if (searchQuery.trim()) {
       const title = getConvTitle(c).toLowerCase();
-      const lastMsg = (c.lastMessageText || '').toLowerCase();
+      const lastMsg = lastMessageText(c).toLowerCase();
       const query = searchQuery.toLowerCase();
       return title.includes(query) || lastMsg.includes(query);
     }
@@ -197,7 +203,7 @@ export default function Messages() {
                     ) : other?.avatarUrl ? (
                       <img
                         src={other.avatarUrl}
-                        alt={other.name}
+                        alt={text(other.name, 'Conversation participant')}
                         className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                         onError={(e) => {
                           e.target.style.display = 'none';
@@ -205,7 +211,7 @@ export default function Messages() {
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white text-sm font-semibold shrink-0 shadow-xs">
-                        {(other?.name || '?').charAt(0).toUpperCase()}
+                        {text(other?.name, '?').charAt(0).toUpperCase()}
                       </div>
                     )}
 
@@ -223,7 +229,7 @@ export default function Messages() {
 
                       <div className="flex items-center justify-between gap-2 mt-1">
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          {conv.lastMessageText || 'Started conversation'}
+                          {lastMessageText(conv) || 'Started conversation'}
                         </p>
                         {conv.unreadCount > 0 && (
                           <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs">
@@ -272,8 +278,8 @@ export default function Messages() {
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {activeConv.type === 'team'
-                        ? `${(activeConv.participants || []).length} teammates in this squad`
-                        : otherUser?.college || otherUser?.headline || 'DevSync Student'}
+                        ? `${Array.isArray(activeConv.participants) ? activeConv.participants.length : 0} teammates in this squad`
+                        : text(otherUser?.college) || text(otherUser?.headline) || 'DevSync Student'}
                     </p>
                   </div>
                 </div>
@@ -307,7 +313,7 @@ export default function Messages() {
                   <div className="p-4">
                     <ListSkeleton count={4} />
                   </div>
-                ) : messages.length === 0 ? (
+                ) : !Array.isArray(messages) || messages.length === 0 ? (
                   <div className="text-center text-xs text-slate-500 dark:text-slate-400 py-16 flex flex-col items-center">
                     <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3">
                       <Sparkles className="w-6 h-6" />
@@ -328,14 +334,14 @@ export default function Messages() {
                       >
                         {!isMe && (
                           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white text-[11px] font-semibold shrink-0 mt-1">
-                            {(msg.sender?.name || '?').charAt(0).toUpperCase()}
+                            {senderName(msg).charAt(0).toUpperCase()}
                           </div>
                         )}
 
                         <div className={`max-w-[80%] sm:max-w-md ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
                           {!isMe && (
                             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mb-1 px-1">
-                              {msg.sender?.name}
+                              {senderName(msg)}
                             </span>
                           )}
 
@@ -346,7 +352,7 @@ export default function Messages() {
                                 : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 shadow-xs rounded-bl-xs'
                             }`}
                           >
-                            {msg.text}
+                            {text(msg?.text)}
                           </div>
 
                           <span className="text-[10px] text-slate-400 mt-1 px-1 flex items-center gap-1 font-mono">
@@ -387,7 +393,7 @@ export default function Messages() {
           ) : (
             <div className="flex-1 flex items-center justify-center p-8">
               <EmptyState
-                icon={<MessageSquare className="w-8 h-8 text-indigo-500" />}
+                icon={MessageSquare}
                 title="Select a Conversation"
                 message="Choose a teammate or squad chat from the sidebar to start collaborating in real time."
               />
