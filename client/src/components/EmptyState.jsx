@@ -11,8 +11,10 @@ export default function EmptyState({
   actionTo,
   onAction,
 }) {
+  const safeTitle = typeof title === 'string' ? title : ''
+  const safeMessage = typeof message === 'string' ? message : ''
   const iconContent = !Icon ? (
-    <Sparkles className="w-5 h-5" />
+    <Sparkles className="w-6 h-6" />
   ) : typeof Icon === 'string' ? (
     <span className="text-xl">{Icon}</span>
   ) : (
@@ -32,14 +34,12 @@ export default function EmptyState({
       </div>
 
       <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-        {typeof title === 'string' ? title : ''}
+        {safeTitle}
       </h3>
 
-      {message && (
+      {safeMessage && (
         <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-          {typeof message === 'string'
-            ? message
-            : String(message)}
+          {safeMessage}
         </p>
       )}
 
